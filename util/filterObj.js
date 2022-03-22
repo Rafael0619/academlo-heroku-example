@@ -1,14 +1,13 @@
 const fileterObj = (obj, ...allowedFields) => {
+  const newObj = {};
 
-    const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) {
+      newObj[el] = obj[el];
+    }
+  });
 
-    Object.keys(obj).forEach((el) => {
-        if (allowedFields.includes(el)){
-            newObj[el] = obj[el];
-        }
-    });
-
-    return newObj;
+  return newObj;
 };
 
-module.exports = {fileterObj};
+module.exports = { fileterObj };
