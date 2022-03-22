@@ -1,11 +1,13 @@
-const req = require("express/lib/request");
-const res = require("express/lib/response");
+const bcrypt = require("bcryptjs");
+
 const { fileterObj } = require("../util/filterObj");
+
 const { User } = require("../models/user.model");
 const { Post } = require("../models/post.model");
 const { Comment } = require("../models/comment.model");
-const { catchAsync } = require("../util/catchAsync");
 const { AppError } = require("../util/appError");
+
+const { catchAsync } = require("../util/catchAsync");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll({
@@ -48,7 +50,12 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
     );
   }
 
-  const newUser = await User.create({ name, email, password });
+  const salt = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const newUser = await User.create({ name, email, password: hashedPassword });
+
+  newUser.password = undefined;
 
   res.status(201).json({
     status: "success",
@@ -56,45 +63,22 @@ exports.createNewUser = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateUser = (req, res) => {
-  const { id } = req.params;
-  const data = fileterObj(req.body, "name", "age");
+exports.loginUser = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
 
-  // const userIndex = users.findIndex((user) => user.id === +id);
+  const user = await User.findOne({ where: { email, status: "Active" } });
 
-  // if (!userIndex === -1) {
-  //   res.status(404).json({
-  //     status: "error",
-  //     message: "User not found, Invalid ID",
-  //   });
-  //   return;
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return next(new AppError(404, "Credentials are invalid"));
+  }
+
+  // const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  // if (!isPasswordValid) {
+  //   return next(new AppError(400, "Credentials are invalid"));
   // }
 
-  // let updateUser = users[userIndex];
-
-  // updateUser = { ...updateUser, ...data };
-
-  // users[userIndex] = updateUser;
-
-  res.status(204).json({
+  res.status(200).json({
     status: "success",
   });
-};
-
-exports.deleteUser = (req, res) => {
-  const { id } = req.params;
-
-  // const userIndex = users.findIndex((user) => user.id === +id);
-
-  // if (userIndex === -1) {
-  //   res.status(404).json({
-  //     status: "error",
-  //     message: "couldnt delete user, invalid ID",
-  //   });
-  //   return;
-  // }
-
-  // users.splice(userIndex, 1);
-
-  res.status(204).json({ status: "success" });
-};
+});
