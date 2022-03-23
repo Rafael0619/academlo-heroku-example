@@ -16,10 +16,14 @@ dotenv.config({ path: "./config.env" });
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll({
     where: { status: "Active" },
+    attributes: { exclude: ["password"] },
     include: [
       {
         model: Post,
-        include: { model: Comment, include: [{ model: User }] },
+        include: {
+          model: Comment,
+          include: [{ model: User, attributes: { exclude: ["password"] } }],
+        },
       },
       { model: Comment, include: [{ model: Post }] },
     ],

@@ -11,7 +11,7 @@ const {
 
 const { validateSession } = require("../middlewares/auth.middleware");
 
-router.get("/", getAllUsers);
+router.get("/", validateSession, getAllUsers);
 
 router.get("/:id", validateSession, getUserById);
 
