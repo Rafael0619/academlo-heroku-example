@@ -9,9 +9,11 @@ const {
   loginUser,
 } = require("../controllers/users.controller");
 
+const { validateSession } = require("../middlewares/auth.middleware");
+
 router.get("/", getAllUsers);
 
-router.get("/:id", getUserById);
+router.get("/:id", validateSession, getUserById);
 
 router.post("/", createNewUser);
 

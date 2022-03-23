@@ -1,4 +1,6 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
 const { fileterObj } = require("../util/filterObj");
 
@@ -8,6 +10,8 @@ const { Comment } = require("../models/comment.model");
 const { AppError } = require("../util/appError");
 
 const { catchAsync } = require("../util/catchAsync");
+
+dotenv.config({ path: "./config.env" });
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll({
@@ -72,13 +76,20 @@ exports.loginUser = catchAsync(async (req, res, next) => {
     return next(new AppError(404, "Credentials are invalid"));
   }
 
-  // const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  // if (!isPasswordValid) {
-  //   return next(new AppError(400, "Credentials are invalid"));
-  // }
+  const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRESIN,
+  });
 
   res.status(200).json({
     status: "success",
+    data: {
+      token,
+    },
   });
 });
+
+// const isPasswordValid = await bcrypt.compare(password, user.password);
+
+// if (!isPasswordValid) {
+//   return next(new AppError(400, "Credentials are invalid"));
+// }
